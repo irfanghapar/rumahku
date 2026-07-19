@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------
+   Rumahku design tokens — MyUnitManager theme
+   (deep forest green + lime, Wise-style). The whole theme lives
+   here: swap these values to re-skin the entire app.
+   --------------------------------------------------------------- */
+:root {
+  --color-cream: 241 243 238;  /* app background  #F1F3EE */
+  --color-paper: 255 255 255;  /* cards           #FFFFFF */
+  --color-ink: 34 34 34;       /* headings        #222222 */
+  --color-soot: 106 106 106;   /* body text       #6A6A6A */
+  --color-line: 231 234 227;   /* borders         #E7EAE3 */
+
+  /* brand green (was "clay" — keep the name so classes don't change) */
+  --color-clay-50: 246 251 239;   /* #F6FBEF selected tint  */
+  --color-clay-100: 226 246 213;  /* #E2F6D5 light tint     */
+  --color-clay-200: 205 234 179;  /* #CDEAB3                */
+  --color-clay-500: 22 51 0;      /* #163300 primary dark   */
+  --color-clay-600: 17 40 0;      /* #112800 hover          */
+  --color-clay-700: 14 33 0;      /* #0E2100 hero deep      */
+
+  /* lime accent */
+  --color-lime-300: 193 241 155;  /* #C1F19B */
+  --color-lime-400: 159 232 112;  /* #9FE870 main accent    */
+  --color-lime-500: 136 217 87;   /* #88D957 pressed        */
+  --color-limeink: 14 15 12;      /* #0E0F0C text on lime   */
+
+  /* positive greens */
+  --color-sage-100: 226 246 213;  /* #E2F6D5 */
+  --color-sage-600: 45 90 18;     /* #2D5A12 */
+  --color-sage-700: 35 74 14;     /* #234A0E */
+
+  /* danger / overdue */
+  --color-danger-50: 253 238 236; /* #FDEEEC */
+  --color-danger-200: 245 198 193;/* #F5C6C1 */
+  --color-danger-600: 208 52 44;  /* #D0342C */
+  --color-danger-700: 168 40 31;  /* #A8281F */
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  @apply bg-cream text-soot;
+}
+
+/* focus rings */
+*:focus-visible {
+  outline: 2px solid rgb(var(--color-lime-500));
+  outline-offset: 1px;
+  border-radius: 6px;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-paper shadow-card;
+  }
+  .input {
+    @apply w-full rounded-xl border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-soot/40 focus:border-lime-500 focus:outline-none focus:ring-1 focus:ring-lime-500/50;
+  }
+  .label {
+    @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-soot/80;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .btn-primary {
+    @apply btn bg-lime-400 text-limeink shadow-lime hover:bg-lime-500 active:bg-lime-500;
+  }
+  .btn-dark {
+    @apply btn bg-clay-500 text-lime-400 hover:bg-clay-700;
+  }
+  .btn-secondary {
+    @apply btn border border-line bg-paper text-ink hover:bg-cream;
+  }
+  .btn-ghost {
+    @apply btn text-clay-500 hover:bg-clay-50;
+  }
+  .th {
+    @apply px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-soot/70;
+  }
+  .td {
+    @apply px-4 py-3 text-sm text-ink;
+  }
+  /* horizontally scrollable table card for small screens */
+  .table-card {
+    @apply card overflow-x-auto;
+  }
+  .table-card table {
+    min-width: 640px;
+  }
+}
+
+/* mobile bottom nav safe area */
+.bottom-safe {
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+}
+
+/* print styles for receipts / statements */
+@media print {
+  body {
+    background: white !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-area {
+    box-shadow: none !important;
+    border: none !important;
+  }
+}
