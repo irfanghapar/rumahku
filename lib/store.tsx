@@ -101,6 +101,14 @@ function reducer(state: AppState, action: Action): AppState {
     case "postInvoices": {
       let s = state;
       const newInvoices: Invoice[] = [];
+      // apply SST for taxable codes: amount becomes gross (base + tax)
+      const withTax = (line: Omit<Invoice, "id" | "docNum" | "balance">) => {
+        const code = s.codes.find((c) => c.code === line.code);
+        if (!code || !code.taxable) return { ...line, sst: 0 };
+        const base = line.amount;
+        const tax = Math.round(base * (s.settings.sstRatePct / 100) * 100) / 100;
+        return { ...line, amount: Math.round((base + tax) * 100) / 100, sst: tax };
+      };
       if (action.groupByLot) {
         // one document per lot, items share docNum
         const byLot = new Map<string, typeof action.lines>();
@@ -112,7 +120,8 @@ function reducer(state: AppState, action: Action): AppState {
         byLot.forEach((lines) => {
           const [docNum, s2] = nextDoc(s, action.docType);
           s = s2;
-          lines.forEach((line, idx) => {
+          lines.forEach((raw, idx) => {
+            const line = withTax(raw);
             newInvoices.push({
               ...line,
               id: `${docNum}-${idx + 1}`,
@@ -122,7 +131,8 @@ function reducer(state: AppState, action: Action): AppState {
           });
         });
       } else {
-        for (const line of action.lines) {
+        for (const raw of action.lines) {
+          const line = withTax(raw);
           const [docNum, s2] = nextDoc(s, action.docType);
           s = s2;
           newInvoices.push({
@@ -266,13 +276,43 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (raw) {
         const parsed = JSON.parse(raw) as AppState;
         if (parsed && parsed.lots && parsed.settings) {
-          // merge with seed defaults so older saved data gains new fields
+          // merge with seed defaults so older saved data gains new fields.
+          // `c` is typed as the current BillingCode, but data saved by an
+          // older build won't actually have the new keys at runtime — so we
+          // read each field with a fallback (via `any`) rather than spreading.
           const seed = buildSeed();
+          const codes: BillingCode[] = (parsed.codes ?? seed.codes).map(
+            (raw): BillingCode => {
+              const c = raw as Partial<BillingCode> & { code: string };
+              const seedMatch = seed.codes.find((s) => s.code === c.code);
+              return {
+                code: c.code,
+                docType: c.docType ?? seedMatch?.docType ?? "IV",
+                description: c.description ?? seedMatch?.description ?? "",
+                method: c.method ?? seedMatch?.method ?? "fixed",
+                rate: c.rate ?? seedMatch?.rate ?? 0,
+                frequency: c.frequency ?? seedMatch?.frequency ?? "One-off",
+                debitAcc: c.debitAcc ?? seedMatch?.debitAcc ?? "",
+                creditAcc: c.creditAcc ?? seedMatch?.creditAcc ?? "",
+                active: c.active ?? seedMatch?.active ?? true,
+                dueDays: c.dueDays ?? parsed.settings?.dueDays ?? 14,
+                lpiChargeable: c.lpiChargeable ?? seedMatch?.lpiChargeable ?? false,
+                lpiRate: c.lpiRate ?? seedMatch?.lpiRate ?? 0,
+                lpiGrace: c.lpiGrace ?? parsed.settings?.lpiGraceDays ?? 14,
+                lpiSkip: c.lpiSkip ?? 0,
+                lpiMin: c.lpiMin ?? 0,
+                taxable: c.taxable ?? seedMatch?.taxable ?? false,
+                sstCode: c.sstCode ?? seedMatch?.sstCode ?? "EX",
+              };
+            }
+          );
           dispatch({
             type: "hydrate",
             state: {
               ...seed,
               ...parsed,
+              codes,
+              settings: { ...seed.settings, ...parsed.settings },
               vouchers: parsed.vouchers ?? seed.vouchers,
               announcements: parsed.announcements ?? seed.announcements,
               parcels: parsed.parcels ?? seed.parcels,
@@ -381,13 +421,17 @@ export function computeLPI(state: AppState) {
   const lines: Omit<Invoice, "id" | "docNum" | "balance">[] = [];
   for (const inv of state.invoices) {
     if (inv.docType === "IA" || inv.balance <= 0.004) continue;
-    const overdue = daysBetween(inv.dueDate, today) - state.settings.lpiGraceDays;
-    if (overdue <= 0) continue;
     if (already.has(inv.id)) continue;
-    const lpi =
-      Math.round(
-        ((inv.balance * (state.settings.lpiRatePct / 100)) / 365) * overdue * 100
-      ) / 100;
+    // per-code LPI settings, falling back to the global defaults
+    const code = state.codes.find((c) => c.code === inv.code);
+    if (code && !code.lpiChargeable) continue; // code explicitly not chargeable
+    const grace = code?.lpiGrace ?? state.settings.lpiGraceDays;
+    const ratePct = code?.lpiChargeable ? code.lpiRate : state.settings.lpiRatePct;
+    const overdue = daysBetween(inv.dueDate, today) - grace;
+    if (overdue <= 0) continue;
+    let lpi =
+      Math.round(((inv.balance * (ratePct / 100)) / 365) * overdue * 100) / 100;
+    if (code && code.lpiMin > 0) lpi = Math.max(lpi, code.lpiMin);
     if (lpi < 0.01) continue;
     lines.push({
       lotId: inv.lotId,

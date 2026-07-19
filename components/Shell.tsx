@@ -161,6 +161,7 @@ const NAV: NavGroup[] = [
       { href: "/accounts/outstanding", label: "Outstanding", icon: ic(ICONS.overdue) },
       { href: "/accounts/settlement", label: "Billing & Settlement", icon: ic(ICONS.settle) },
       { href: "/accounts/deposits", label: "Deposit Statement", icon: ic(ICONS.deposit) },
+      { href: "/accounts/reminders", label: "Reminders & Statements", icon: ic(ICONS.megaphone) },
     ],
   },
   {

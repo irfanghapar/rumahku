@@ -50,30 +50,46 @@ export default function MonthlyBillingPage() {
       code: string;
       description: string;
       amount: number;
+      sst: number;
+      gross: number;
       skipped: boolean;
     }[] = [];
     for (const lot of [...state.lots].sort((a, b) => a.id.localeCompare(b.id))) {
       if (!ownedLotIds.has(lot.id)) continue;
       for (const code of recurringCodes) {
         if (!selected.includes(code.code)) continue;
-        const amount =
+        const base =
           code.method === "rate"
             ? Math.round(lot.builtUp * code.rate * 100) / 100
             : code.rate;
+        const sst = code.taxable
+          ? Math.round(base * (state.settings.sstRatePct / 100) * 100) / 100
+          : 0;
         lines.push({
           lotId: lot.id,
           code: code.code,
           description: code.description,
-          amount,
+          amount: base,
+          sst,
+          gross: Math.round((base + sst) * 100) / 100,
           skipped: alreadyBilled.has(`${lot.id}|${code.code}`),
         });
       }
     }
     return lines;
-  }, [state.lots, recurringCodes, selected, alreadyBilled, ownedLotIds]);
+  }, [
+    state.lots,
+    recurringCodes,
+    selected,
+    alreadyBilled,
+    ownedLotIds,
+    state.settings.sstRatePct,
+  ]);
 
   const toPost = previewLines.filter((l) => !l.skipped);
-  const total = toPost.reduce((s, l) => s + l.amount, 0);
+  const total = toPost.reduce((s, l) => s + l.gross, 0);
+  const totalSst = toPost.reduce((s, l) => s + l.sst, 0);
+  const anyTax = previewLines.some((l) => l.sst > 0);
 
   function post() {
     if (toPost.length === 0) return;
@@ -193,11 +209,16 @@ export default function MonthlyBillingPage() {
         </div>
         <div className="card p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-soot/60">
-            Total value
+            Total value {anyTax ? "(incl. SST)" : ""}
           </p>
           <p className="mt-1 font-display text-xl font-bold text-ink">
             {fmtRM(total)}
           </p>
+          {anyTax && (
+            <p className="mt-0.5 text-xs text-soot/60">
+              of which SST {fmtRM(totalSst)}
+            </p>
+          )}
         </div>
       </div>
 
@@ -208,7 +229,11 @@ export default function MonthlyBillingPage() {
               <th className="th">Lot Num</th>
               <th className="th">Code</th>
               <th className="th">Description</th>
-              <th className="th text-right">Amount</th>
+              <th className="th text-right">
+                {anyTax ? "Base" : "Amount"}
+              </th>
+              {anyTax && <th className="th text-right">SST</th>}
+              {anyTax && <th className="th text-right">Total</th>}
               <th className="th">Status</th>
             </tr>
           </thead>
@@ -225,6 +250,16 @@ export default function MonthlyBillingPage() {
                 <td className="td">{l.code}</td>
                 <td className="td">{l.description}</td>
                 <td className="td text-right">{fmtNum(l.amount)}</td>
+                {anyTax && (
+                  <td className="td text-right text-soot/70">
+                    {l.sst ? fmtNum(l.sst) : "—"}
+                  </td>
+                )}
+                {anyTax && (
+                  <td className="td text-right font-semibold">
+                    {fmtNum(l.gross)}
+                  </td>
+                )}
                 <td className="td">
                   {l.skipped ? (
                     <Badge tone="neutral">Billed</Badge>

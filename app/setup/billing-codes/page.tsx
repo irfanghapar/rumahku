@@ -24,6 +24,14 @@ const emptyCode: BillingCode = {
   debitAcc: "1201001",
   creditAcc: "",
   active: true,
+  dueDays: 14,
+  lpiChargeable: false,
+  lpiRate: 0,
+  lpiGrace: 14,
+  lpiSkip: 0,
+  lpiMin: 0,
+  taxable: false,
+  sstCode: "EX",
 };
 
 export default function BillingCodesPage() {
@@ -90,8 +98,9 @@ export default function BillingCodesPage() {
               <th className="th">Item Description</th>
               <th className="th text-right">Rate / Amount</th>
               <th className="th">Frequency</th>
-              <th className="th">Debit Acc</th>
-              <th className="th">Credit Acc</th>
+              <th className="th text-center">LPI</th>
+              <th className="th text-center">SST</th>
+              <th className="th">Accounts (Dr / Cr)</th>
               <th className="th">Status</th>
               <th className="th" />
             </tr>
@@ -110,8 +119,23 @@ export default function BillingCodesPage() {
                     : `RM ${fmtNum(c.rate)}`}
                 </td>
                 <td className="td">{c.frequency}</td>
-                <td className="td text-soot/70">{c.debitAcc}</td>
-                <td className="td text-soot/70">{c.creditAcc}</td>
+                <td className="td text-center">
+                  {c.lpiChargeable ? (
+                    <Badge tone="warn">{fmtNum(c.lpiRate, 0)}%</Badge>
+                  ) : (
+                    <span className="text-soot/30">—</span>
+                  )}
+                </td>
+                <td className="td text-center">
+                  {c.taxable ? (
+                    <Badge tone="clay">{c.sstCode}</Badge>
+                  ) : (
+                    <span className="text-soot/30">{c.sstCode}</span>
+                  )}
+                </td>
+                <td className="td text-soot/70">
+                  {c.debitAcc} / {c.creditAcc}
+                </td>
                 <td className="td">
                   <Badge tone={c.active ? "good" : "bad"}>
                     {c.active ? "Active" : "Suspended"}
@@ -267,6 +291,136 @@ export default function BillingCodesPage() {
                 }
               />
             </Field>
+            <Field label="Due Days">
+              <input
+                type="number"
+                className="input"
+                value={editing.dueDays}
+                onChange={(e) =>
+                  setEditing({ ...editing, dueDays: Number(e.target.value) })
+                }
+              />
+            </Field>
+
+            {/* Late Payment Interest — matches CSS "Late payment charges setting" */}
+            <div className="sm:col-span-2 mt-1 rounded-xl border border-line bg-cream/40 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-bold text-ink">
+                  Late Payment Interest
+                </h3>
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-clay-500"
+                    checked={editing.lpiChargeable}
+                    onChange={(e) =>
+                      setEditing({ ...editing, lpiChargeable: e.target.checked })
+                    }
+                  />
+                  LPI Chargeable
+                </label>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <Field label="LPI Rate (% p.a.)">
+                  <input
+                    type="number"
+                    step="0.5"
+                    className="input"
+                    disabled={!editing.lpiChargeable}
+                    value={editing.lpiRate}
+                    onChange={(e) =>
+                      setEditing({ ...editing, lpiRate: Number(e.target.value) })
+                    }
+                  />
+                </Field>
+                <Field label="LPI Grace (days)">
+                  <input
+                    type="number"
+                    className="input"
+                    disabled={!editing.lpiChargeable}
+                    value={editing.lpiGrace}
+                    onChange={(e) =>
+                      setEditing({ ...editing, lpiGrace: Number(e.target.value) })
+                    }
+                  />
+                </Field>
+                <Field label="LPI Skip (months)">
+                  <input
+                    type="number"
+                    className="input"
+                    disabled={!editing.lpiChargeable}
+                    value={editing.lpiSkip}
+                    onChange={(e) =>
+                      setEditing({ ...editing, lpiSkip: Number(e.target.value) })
+                    }
+                  />
+                </Field>
+                <Field label="Minimum LPI (RM)">
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="input"
+                    disabled={!editing.lpiChargeable}
+                    value={editing.lpiMin}
+                    onChange={(e) =>
+                      setEditing({ ...editing, lpiMin: Number(e.target.value) })
+                    }
+                  />
+                </Field>
+              </div>
+            </div>
+
+            {/* SST */}
+            <div className="sm:col-span-2 rounded-xl border border-line bg-cream/40 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-bold text-ink">Service Tax (SST)</h3>
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-clay-500"
+                    checked={editing.taxable}
+                    onChange={(e) =>
+                      setEditing({
+                        ...editing,
+                        taxable: e.target.checked,
+                        sstCode: e.target.checked ? "SR" : "EX",
+                      })
+                    }
+                  />
+                  SST applies
+                </label>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="SST Code">
+                  <select
+                    className="input"
+                    value={editing.sstCode}
+                    onChange={(e) =>
+                      setEditing({
+                        ...editing,
+                        sstCode: e.target.value as BillingCode["sstCode"],
+                        taxable: e.target.value === "SR",
+                      })
+                    }
+                  >
+                    <option value="SR">SR — Standard-Rated</option>
+                    <option value="EX">EX — Exempt</option>
+                    <option value="OS">OS — Out of Scope</option>
+                  </select>
+                </Field>
+                <Field label="Rate applied">
+                  <input
+                    className="input"
+                    disabled
+                    value={
+                      editing.taxable
+                        ? `${state.settings.sstRatePct}% (from Settings)`
+                        : "No SST"
+                    }
+                  />
+                </Field>
+              </div>
+            </div>
           </div>
         )}
       </Drawer>

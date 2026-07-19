@@ -118,11 +118,30 @@ export default function SettingsPage() {
                 }
               />
             </Field>
+            <Field label="SST Rate (%)">
+              <input
+                type="number"
+                step="0.5"
+                className="input"
+                value={form.sstRatePct}
+                onChange={(e) =>
+                  setForm({ ...form, sstRatePct: Number(e.target.value) })
+                }
+              />
+            </Field>
+            <Field label="SST Registration No">
+              <input
+                className="input"
+                value={form.sstRegNo}
+                onChange={(e) => setForm({ ...form, sstRegNo: e.target.value })}
+              />
+            </Field>
           </div>
           <p className="mt-4 rounded-lg bg-cream px-3 py-2 text-xs leading-relaxed text-soot/70">
-            Late payment interest is charged on overdue balances after the grace
-            period, pro-rated daily at the annual rate — same behaviour as the
-            LPI settings in CSS. Apply it from the{" "}
+            LPI and SST here are the <span className="font-semibold">defaults</span>.
+            Each billing code can override whether it charges LPI and whether SST
+            applies (Billing Codes → edit). SST is added to taxable charges at
+            billing time; LPI is applied from the{" "}
             <span className="font-semibold">Outstanding</span> page.
           </p>
         </div>

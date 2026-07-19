@@ -94,7 +94,18 @@ export function buildSeed(): AppState {
   });
 
   // ---- billing codes --------------------------------------------------
-  const codes: BillingCode[] = [
+  type BaseCode = Omit<
+    BillingCode,
+    | "dueDays"
+    | "lpiChargeable"
+    | "lpiRate"
+    | "lpiGrace"
+    | "lpiSkip"
+    | "lpiMin"
+    | "taxable"
+    | "sstCode"
+  >;
+  const codes: BillingCode[] = ([
     {
       code: "IVSC",
       docType: "IV",
@@ -194,7 +205,22 @@ export function buildSeed(): AppState {
       creditAcc: "1201001",
       active: true,
     },
-  ];
+  ] as BaseCode[]).map((c): BillingCode => {
+    // per-code LPI + tax defaults (CSS "Late payment charges setting")
+    const chargeable = ["IVSC", "IVSF", "UBWM", "IVCP"].includes(c.code);
+    return {
+      ...c,
+      dueDays: 14,
+      lpiChargeable: chargeable,
+      lpiRate: chargeable ? 10 : 0,
+      lpiGrace: 14,
+      lpiSkip: 0,
+      lpiMin: 0,
+      // car-park rental is a commercial supply → SST applies; the rest exempt
+      taxable: c.code === "IVCP",
+      sstCode: c.code === "IVCP" ? "SR" : "EX",
+    };
+  });
 
   // ---- invoices Feb–Jul 2026 + receipts -------------------------------
   const invoices: Invoice[] = [];
@@ -495,6 +521,8 @@ export function buildSeed(): AppState {
       lpiRatePct: 10,
       lpiGraceDays: 14,
       dueDays: 14,
+      sstRatePct: 8,
+      sstRegNo: "W10-2026-31000123",
     },
     seq: { IV: ivSeq, UB: ubSeq, IA: 1, DN: dnSeq, CN: 1, OR: orSeq, PV: pvSeq },
   };

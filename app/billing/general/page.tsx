@@ -30,9 +30,19 @@ export default function GeneralBillingPage() {
   );
 
   const parsed = lines
-    .map((l) => ({ ...l, value: parseFloat(l.amount) }))
+    .map((l) => {
+      const value = parseFloat(l.amount);
+      const code = state.codes.find((c) => c.code === l.code);
+      const sst =
+        code?.taxable && !isNaN(value)
+          ? Math.round(value * (state.settings.sstRatePct / 100) * 100) / 100
+          : 0;
+      return { ...l, value, sst };
+    })
     .filter((l) => l.code && !isNaN(l.value) && l.value > 0);
-  const total = parsed.reduce((s, l) => s + l.value, 0);
+  const totalBase = parsed.reduce((s, l) => s + l.value, 0);
+  const totalSst = parsed.reduce((s, l) => s + l.sst, 0);
+  const total = Math.round((totalBase + totalSst) * 100) / 100;
 
   function setLine(i: number, patch: Partial<Line>) {
     setLines(lines.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
@@ -224,9 +234,33 @@ export default function GeneralBillingPage() {
                 </td>
               </tr>
             ))}
+            {totalSst > 0 && (
+              <>
+                <tr className="bg-cream/30">
+                  <td className="td text-right text-soot/70" colSpan={3}>
+                    Subtotal
+                  </td>
+                  <td className="td text-right text-soot/80">
+                    {fmtRM(totalBase)}
+                  </td>
+                  <td />
+                </tr>
+                <tr className="bg-cream/30">
+                  <td className="td text-right text-soot/70" colSpan={3}>
+                    SST {state.settings.sstRatePct}%
+                  </td>
+                  <td className="td text-right text-soot/80">
+                    {fmtRM(totalSst)}
+                  </td>
+                  <td />
+                </tr>
+              </>
+            )}
             <tr className="bg-cream/50">
               <td className="td" colSpan={3}>
-                <span className="font-semibold text-ink">Total Amount</span>
+                <span className="font-semibold text-ink">
+                  Total Amount {totalSst > 0 ? "(incl. SST)" : ""}
+                </span>
               </td>
               <td className="td text-right font-display text-base font-bold text-ink">
                 {fmtRM(total)}

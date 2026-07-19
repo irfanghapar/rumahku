@@ -36,6 +36,16 @@ export interface BillingCode {
   debitAcc: string;
   creditAcc: string;
   active: boolean;
+  dueDays: number; // days after invoice date (falls back to settings)
+  // late payment interest — configured per code (CSS "LPI" fields)
+  lpiChargeable: boolean;
+  lpiRate: number; // % per annum
+  lpiGrace: number; // grace days before LPI starts
+  lpiSkip: number; // skip period in months (0 = none)
+  lpiMin: number; // minimum LPI charge (RM)
+  // SST — service tax
+  taxable: boolean; // SST applies to this charge
+  sstCode: "SR" | "OS" | "EX"; // Standard-Rated / Out-of-Scope / Exempt
 }
 
 export interface Invoice {
@@ -47,8 +57,9 @@ export interface Invoice {
   code: string; // billing code
   docType: DocType;
   description: string;
-  amount: number;
+  amount: number; // GROSS (base + SST) — the amount owed & allocated against
   balance: number;
+  sst?: number; // SST portion of amount (0/undefined when non-taxable)
   periodStart?: string;
   periodEnd?: string;
 }
@@ -132,9 +143,11 @@ export interface Settings {
   phone: string;
   email: string;
   waterTariff: number; // RM per unit (m3)
-  lpiRatePct: number; // % per annum
+  lpiRatePct: number; // % per annum (fallback default for new codes)
   lpiGraceDays: number;
   dueDays: number; // days after invoice date
+  sstRatePct: number; // service tax rate, e.g. 8
+  sstRegNo: string; // SST registration number (printed on tax invoices)
 }
 
 export interface Seq {
