@@ -9,6 +9,15 @@ export interface Lot {
   shareUnits: number;
   bumi: "Bumi" | "Non-Bumi";
   address: string;
+  // extended CSS "Lot Information" fields
+  subPhase?: string;
+  levelDesc?: string; // Level Dscp (e.g. "Ground", "Podium")
+  model?: string;
+  landArea?: number; // sq ft (0 for strata units)
+  strataNum?: string;
+  facing?: string;
+  position?: string;
+  remarks?: string;
 }
 
 export interface Owner {
@@ -22,6 +31,23 @@ export interface Owner {
   isCompany: boolean;
   address: string;
   status: "Active" | "Terminated";
+  // extended CSS "Contact Information" fields
+  contactCode?: string;
+  dob?: string; // ISO
+  salute?: string; // Mr / Ms / Dato' …
+  sex?: "Male" | "Female" | "";
+  ethnic?: string;
+  religion?: string;
+  marital?: string;
+  nationality?: string;
+  bumi?: "Bumi" | "Non-Bumi" | "";
+  mailMethod?: "Email" | "Post" | "SMS" | "";
+  companyNum?: string;
+  gstRegNo?: string;
+  designation?: string;
+  phone2?: string;
+  phone3?: string;
+  fax?: string;
 }
 
 export type DocType = "IV" | "UB" | "IA" | "DN" | "CN";
@@ -46,6 +72,9 @@ export interface BillingCode {
   // SST — service tax
   taxable: boolean; // SST applies to this charge
   sstCode: "SR" | "OS" | "EX"; // Standard-Rated / Out-of-Scope / Exempt
+  // GL posting flags (CSS)
+  postConsolidated: boolean; // post consolidated sum to GL
+  offset: boolean; // offsettable against payments
 }
 
 export interface Invoice {
@@ -86,6 +115,7 @@ export interface Meter {
   meterNo: string;
   lastDate: string | null; // ISO
   lastReading: number;
+  lastConsume?: number; // previous period's consumption (m³)
 }
 
 /** Payment voucher — money going OUT (e.g. deposit refunds). */

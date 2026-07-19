@@ -2,12 +2,14 @@
 
 import { Fragment, useMemo, useState } from "react";
 import { Badge, PageHeader } from "@/components/ui";
-import { fmtDate, fmtRM } from "@/lib/format";
+import { fmtDate, fmtRM, todayISO } from "@/lib/format";
 import { useStore } from "@/lib/store";
 
 export default function SettlementPage() {
   const { state } = useStore();
   const [lotId, setLotId] = useState(state.lots[0]?.id ?? "");
+  const [fromDate, setFromDate] = useState("2026-01-01");
+  const [toDate, setToDate] = useState(todayISO());
   const owner = state.owners.find(
     (o) => o.status === "Active" && o.lotIds.includes(lotId)
   );
@@ -15,6 +17,9 @@ export default function SettlementPage() {
   const rows = useMemo(() => {
     const invoices = state.invoices
       .filter((i) => i.lotId === lotId)
+      .filter(
+        (i) => (!fromDate || i.date >= fromDate) && (!toDate || i.date <= toDate)
+      )
       .sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
     return invoices.map((inv) => {
       const settlements = state.receipts
@@ -32,7 +37,7 @@ export default function SettlementPage() {
         .sort((a, b) => a.datePaid.localeCompare(b.datePaid));
       return { inv, settlements };
     });
-  }, [state, lotId]);
+  }, [state, lotId, fromDate, toDate]);
 
   const totalBilled = rows.reduce((s, r) => s + r.inv.amount, 0);
   const totalPaid = rows.reduce(
@@ -70,7 +75,25 @@ export default function SettlementPage() {
         </div>
         <div>
           <label className="label">Name</label>
-          <input className="input w-64" value={owner?.name ?? "Vacant"} disabled />
+          <input className="input w-48" value={owner?.name ?? "Vacant"} disabled />
+        </div>
+        <div>
+          <label className="label">From Date</label>
+          <input
+            type="date"
+            className="input w-40"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="label">To Date</label>
+          <input
+            type="date"
+            className="input w-40"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+          />
         </div>
         {owner && <Badge tone="good">Ownership Active</Badge>}
         <div className="ml-auto flex flex-wrap gap-5 text-sm">
@@ -93,10 +116,13 @@ export default function SettlementPage() {
           <thead className="border-b border-line bg-cream/60">
             <tr>
               <th className="th">Date Trnx</th>
+              <th className="th">Due Date</th>
               <th className="th">Doc Num</th>
+              <th className="th">Party</th>
               <th className="th">Item Description</th>
               <th className="th text-right">Amount</th>
               <th className="th">Receipt No</th>
+              <th className="th">Chequenum</th>
               <th className="th">Date Paid</th>
               <th className="th text-right">Amount Paid</th>
               <th className="th text-right">Item Balance</th>
@@ -112,17 +138,18 @@ export default function SettlementPage() {
                     return (
                       <tr
                         key={i}
-                        className={
-                          "border-b border-line/60 hover:bg-cream/40 " +
-                          (i > 0 ? "" : "")
-                        }
+                        className="border-b border-line/60 hover:bg-cream/40"
                       >
                         {i === 0 ? (
                           <>
                             <td className="td whitespace-nowrap">
                               {fmtDate(inv.date)}
                             </td>
+                            <td className="td whitespace-nowrap text-soot/70">
+                              {fmtDate(inv.dueDate)}
+                            </td>
                             <td className="td text-soot/70">{inv.docNum}</td>
+                            <td className="td text-soot/70">OWN</td>
                             <td className="td">
                               <span className="mr-2">{inv.description}</span>
                               <Badge tone="neutral">{inv.code}</Badge>
@@ -130,11 +157,12 @@ export default function SettlementPage() {
                             <td className="td text-right">{fmtRM(inv.amount)}</td>
                           </>
                         ) : (
-                          <td colSpan={4} />
+                          <td colSpan={6} />
                         )}
                         {s ? (
                           <>
                             <td className="td text-soot/70">{s.receiptNum}</td>
+                            <td className="td text-soot/70">{s.refNum || "—"}</td>
                             <td className="td whitespace-nowrap">
                               {fmtDate(s.datePaid)}
                             </td>
@@ -143,7 +171,7 @@ export default function SettlementPage() {
                             </td>
                           </>
                         ) : (
-                          <td colSpan={3} className="td text-center text-soot/40">
+                          <td colSpan={4} className="td text-center text-soot/40">
                             — unsettled —
                           </td>
                         )}
@@ -166,11 +194,11 @@ export default function SettlementPage() {
               );
             })}
             <tr className="bg-cream/50">
-              <td className="td" colSpan={3}>
+              <td className="td" colSpan={5}>
                 <span className="font-bold text-ink">Totals</span>
               </td>
               <td className="td text-right font-bold">{fmtRM(totalBilled)}</td>
-              <td colSpan={2} />
+              <td colSpan={3} />
               <td className="td text-right font-bold text-sage-600">
                 {fmtRM(totalPaid)}
               </td>

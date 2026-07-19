@@ -59,6 +59,8 @@ export function buildSeed(): AppState {
           unit
         ).padStart(2, "0")}`;
         const builtUp = sizes[(unit - 1) % sizes.length];
+        const facings = ["North", "South", "East", "West", "Pool View", "KLCC View"];
+        const positions = ["Corner", "Intermediate", "End"];
         lots.push({
           id,
           block,
@@ -68,15 +70,40 @@ export function buildSeed(): AppState {
           shareUnits: Math.round(builtUp / 10),
           bumi: rand() < 0.4 ? "Bumi" : "Non-Bumi",
           address: `Unit ${id}, Residensi Rumahku, Jalan Ampang Hilir, 55000 Kuala Lumpur`,
+          subPhase: `Phase ${block === "A" ? 1 : 2}`,
+          levelDesc: level === 1 ? "Podium" : `Level ${level}`,
+          model: builtUp >= 1250 ? "Type C (Dual Key)" : builtUp >= 1100 ? "Type B" : "Type A",
+          landArea: 0, // strata unit
+          strataNum: `PT${45200 + unit}-${block}${level}`,
+          facing: facings[(level * 4 + unit) % facings.length],
+          position: positions[(unit - 1) % positions.length],
+          remarks: "",
         });
       }
     }
   }
 
   // ---- owners: 20 owners over 24 lots (4 vacant) ----------------------
+  const salutes = ["Mr", "Ms", "Mrs", "Encik", "Puan", "Dr", "Dato'"];
+  const ethnics = ["Malay", "Chinese", "Indian", "Others"];
+  const religions = ["Islam", "Buddhism", "Hinduism", "Christianity", "Others"];
+  const maritals = ["Single", "Married", "Divorced"];
+  const mailMethods: Owner["mailMethod"][] = ["Email", "Post", "SMS"];
   const owners: Owner[] = OWNER_NAMES.map(([name, nric], i) => {
     const lot = lots[i];
     const first = name.split(" ")[0].toLowerCase().replace(/[^a-z]/g, "");
+    // derive DOB (approx) from the NRIC prefix YYMMDD
+    const yy = Number(nric.slice(0, 2));
+    const year = (yy > 30 ? 1900 : 2000) + yy;
+    const dob = `${year}-${nric.slice(2, 4)}-${nric.slice(4, 6)}`;
+    const sex: Owner["sex"] = Number(nric.slice(-1)) % 2 === 0 ? "Female" : "Male";
+    const salute = /binti|puan|ms|mrs/i.test(name)
+      ? sex === "Female"
+        ? "Puan"
+        : "Ms"
+      : name.includes("Dato'")
+        ? "Dato'"
+        : salutes[i % salutes.length];
     return {
       id: `OWN-${String(i + 1).padStart(3, "0")}`,
       name,
@@ -90,6 +117,22 @@ export function buildSeed(): AppState {
       isCompany: false,
       address: lot.address,
       status: "Active",
+      contactCode: `C${String(1001 + i)}`,
+      dob,
+      salute,
+      sex,
+      ethnic: ethnics[i % ethnics.length],
+      religion: religions[i % religions.length],
+      marital: maritals[i % maritals.length],
+      nationality: "Malaysian",
+      bumi: lot.bumi,
+      mailMethod: mailMethods[i % mailMethods.length],
+      companyNum: "",
+      gstRegNo: "",
+      designation: "",
+      phone2: "",
+      phone3: "",
+      fax: "",
     };
   });
 
@@ -219,6 +262,8 @@ export function buildSeed(): AppState {
       // car-park rental is a commercial supply → SST applies; the rest exempt
       taxable: c.code === "IVCP",
       sstCode: c.code === "IVCP" ? "SR" : "EX",
+      postConsolidated: ["IVSC", "IVSF"].includes(c.code),
+      offset: c.docType !== "CN",
     };
   });
 
@@ -349,6 +394,7 @@ export function buildSeed(): AppState {
       }
       meter.lastDate = date;
       meter.lastReading = reading;
+      meter.lastConsume = use;
     }
   }
 

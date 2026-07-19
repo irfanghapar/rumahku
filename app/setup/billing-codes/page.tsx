@@ -32,6 +32,8 @@ const emptyCode: BillingCode = {
   lpiMin: 0,
   taxable: false,
   sstCode: "EX",
+  postConsolidated: false,
+  offset: true,
 };
 
 export default function BillingCodesPage() {
@@ -419,6 +421,38 @@ export default function BillingCodesPage() {
                     }
                   />
                 </Field>
+              </div>
+            </div>
+
+            {/* GL posting flags */}
+            <div className="sm:col-span-2 rounded-xl border border-line bg-cream/40 p-4">
+              <h3 className="mb-3 text-sm font-bold text-ink">GL Posting</h3>
+              <div className="flex flex-wrap gap-6">
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-clay-500"
+                    checked={editing.postConsolidated}
+                    onChange={(e) =>
+                      setEditing({
+                        ...editing,
+                        postConsolidated: e.target.checked,
+                      })
+                    }
+                  />
+                  Post consolidated sum to GL
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-clay-500"
+                    checked={editing.offset}
+                    onChange={(e) =>
+                      setEditing({ ...editing, offset: e.target.checked })
+                    }
+                  />
+                  Offsettable against payments
+                </label>
               </div>
             </div>
           </div>

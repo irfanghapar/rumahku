@@ -21,7 +21,17 @@ const emptyLot: Lot = {
   shareUnits: 85,
   bumi: "Non-Bumi",
   address: "",
+  subPhase: "",
+  levelDesc: "",
+  model: "",
+  landArea: 0,
+  strataNum: "",
+  facing: "",
+  position: "",
+  remarks: "",
 };
+
+const SQFT_TO_SQM = 0.092903;
 
 export default function LotsPage() {
   const { state, dispatch } = useStore();
@@ -218,6 +228,42 @@ export default function LotsPage() {
                 <option>Bumi</option>
               </select>
             </Field>
+            <Field label="Sub Phase">
+              <input
+                className="input"
+                value={editing.subPhase ?? ""}
+                onChange={(e) =>
+                  setEditing({ ...editing, subPhase: e.target.value })
+                }
+              />
+            </Field>
+            <Field label="Level Dscp">
+              <input
+                className="input"
+                value={editing.levelDesc ?? ""}
+                placeholder="e.g. Podium, Ground"
+                onChange={(e) =>
+                  setEditing({ ...editing, levelDesc: e.target.value })
+                }
+              />
+            </Field>
+            <Field label="Model">
+              <input
+                className="input"
+                value={editing.model ?? ""}
+                placeholder="e.g. Type A"
+                onChange={(e) => setEditing({ ...editing, model: e.target.value })}
+              />
+            </Field>
+            <Field label="Strata Num">
+              <input
+                className="input"
+                value={editing.strataNum ?? ""}
+                onChange={(e) =>
+                  setEditing({ ...editing, strataNum: e.target.value })
+                }
+              />
+            </Field>
             <Field label="Built-up Area (sq ft)">
               <input
                 type="number"
@@ -227,6 +273,23 @@ export default function LotsPage() {
                   setEditing({ ...editing, builtUp: Number(e.target.value) })
                 }
               />
+              <p className="mt-1 text-xs text-soot/50">
+                ≈ {(editing.builtUp * SQFT_TO_SQM).toFixed(2)} sq m
+              </p>
+            </Field>
+            <Field label="Land Area (sq ft)">
+              <input
+                type="number"
+                className="input"
+                value={editing.landArea ?? 0}
+                onChange={(e) =>
+                  setEditing({ ...editing, landArea: Number(e.target.value) })
+                }
+              />
+              <p className="mt-1 text-xs text-soot/50">
+                ≈ {((editing.landArea ?? 0) * SQFT_TO_SQM).toFixed(2)} sq m ·
+                strata units are usually 0
+              </p>
             </Field>
             <Field label="Share Units">
               <input
@@ -238,12 +301,45 @@ export default function LotsPage() {
                 }
               />
             </Field>
+            <Field label="Facing">
+              <input
+                className="input"
+                value={editing.facing ?? ""}
+                placeholder="e.g. Pool View"
+                onChange={(e) =>
+                  setEditing({ ...editing, facing: e.target.value })
+                }
+              />
+            </Field>
+            <Field label="Position">
+              <select
+                className="input"
+                value={editing.position ?? ""}
+                onChange={(e) =>
+                  setEditing({ ...editing, position: e.target.value })
+                }
+              >
+                <option value="">—</option>
+                <option>Corner</option>
+                <option>Intermediate</option>
+                <option>End</option>
+              </select>
+            </Field>
             <Field label="Lot Actual Address" className="sm:col-span-2">
               <textarea
                 className="input min-h-[70px]"
                 value={editing.address}
                 onChange={(e) =>
                   setEditing({ ...editing, address: e.target.value })
+                }
+              />
+            </Field>
+            <Field label="Remarks" className="sm:col-span-2">
+              <textarea
+                className="input min-h-[56px]"
+                value={editing.remarks ?? ""}
+                onChange={(e) =>
+                  setEditing({ ...editing, remarks: e.target.value })
                 }
               />
             </Field>

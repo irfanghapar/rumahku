@@ -25,6 +25,22 @@ function newOwner(state: { owners: Owner[] }): Owner {
     isCompany: false,
     address: "",
     status: "Active",
+    contactCode: `C${String(1000 + n)}`,
+    dob: "",
+    salute: "",
+    sex: "",
+    ethnic: "",
+    religion: "",
+    marital: "",
+    nationality: "Malaysian",
+    bumi: "",
+    mailMethod: "Email",
+    companyNum: "",
+    gstRegNo: "",
+    designation: "",
+    phone2: "",
+    phone3: "",
+    fax: "",
   };
 }
 
@@ -178,21 +194,12 @@ export default function OwnersPage() {
               Contact Information
             </h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Name" className="sm:col-span-2">
+              <Field label="Contact Code">
                 <input
                   className="input"
-                  value={editing.name}
+                  value={editing.contactCode ?? ""}
                   onChange={(e) =>
-                    setEditing({ ...editing, name: e.target.value })
-                  }
-                />
-              </Field>
-              <Field label="NRIC / Passport / ROC">
-                <input
-                  className="input"
-                  value={editing.nric}
-                  onChange={(e) =>
-                    setEditing({ ...editing, nric: e.target.value })
+                    setEditing({ ...editing, contactCode: e.target.value })
                   }
                 />
               </Field>
@@ -211,12 +218,178 @@ export default function OwnersPage() {
                   <option>Yes</option>
                 </select>
               </Field>
-              <Field label="Telephone">
+              <Field label="Name" className="sm:col-span-2">
                 <input
                   className="input"
-                  value={editing.phone}
+                  value={editing.name}
                   onChange={(e) =>
-                    setEditing({ ...editing, phone: e.target.value })
+                    setEditing({ ...editing, name: e.target.value })
+                  }
+                />
+              </Field>
+              <Field label="NRIC / Passport / ROC">
+                <input
+                  className="input"
+                  value={editing.nric}
+                  onChange={(e) =>
+                    setEditing({ ...editing, nric: e.target.value })
+                  }
+                />
+              </Field>
+              <Field label="Date Of Birth">
+                <input
+                  type="date"
+                  className="input"
+                  value={editing.dob ?? ""}
+                  onChange={(e) => setEditing({ ...editing, dob: e.target.value })}
+                />
+              </Field>
+              <Field label="Salutation">
+                <select
+                  className="input"
+                  value={editing.salute ?? ""}
+                  onChange={(e) =>
+                    setEditing({ ...editing, salute: e.target.value })
+                  }
+                >
+                  <option value="">—</option>
+                  {["Mr", "Ms", "Mrs", "Encik", "Puan", "Dr", "Dato'", "Datin"].map(
+                    (s) => (
+                      <option key={s}>{s}</option>
+                    )
+                  )}
+                </select>
+              </Field>
+              <Field label="Sex">
+                <select
+                  className="input"
+                  value={editing.sex ?? ""}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      sex: e.target.value as Owner["sex"],
+                    })
+                  }
+                >
+                  <option value="">—</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                </select>
+              </Field>
+              <Field label="Ethnic">
+                <select
+                  className="input"
+                  value={editing.ethnic ?? ""}
+                  onChange={(e) =>
+                    setEditing({ ...editing, ethnic: e.target.value })
+                  }
+                >
+                  <option value="">—</option>
+                  {["Malay", "Chinese", "Indian", "Others"].map((x) => (
+                    <option key={x}>{x}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Religion">
+                <select
+                  className="input"
+                  value={editing.religion ?? ""}
+                  onChange={(e) =>
+                    setEditing({ ...editing, religion: e.target.value })
+                  }
+                >
+                  <option value="">—</option>
+                  {["Islam", "Buddhism", "Hinduism", "Christianity", "Others"].map(
+                    (x) => (
+                      <option key={x}>{x}</option>
+                    )
+                  )}
+                </select>
+              </Field>
+              <Field label="Marital Status">
+                <select
+                  className="input"
+                  value={editing.marital ?? ""}
+                  onChange={(e) =>
+                    setEditing({ ...editing, marital: e.target.value })
+                  }
+                >
+                  <option value="">—</option>
+                  {["Single", "Married", "Divorced", "Widowed"].map((x) => (
+                    <option key={x}>{x}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Nationality">
+                <input
+                  className="input"
+                  value={editing.nationality ?? ""}
+                  onChange={(e) =>
+                    setEditing({ ...editing, nationality: e.target.value })
+                  }
+                />
+              </Field>
+              <Field label="Bumi Status">
+                <select
+                  className="input"
+                  value={editing.bumi ?? ""}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      bumi: e.target.value as Owner["bumi"],
+                    })
+                  }
+                >
+                  <option value="">—</option>
+                  <option>Bumi</option>
+                  <option>Non-Bumi</option>
+                </select>
+              </Field>
+              <Field label="Mail Method">
+                <select
+                  className="input"
+                  value={editing.mailMethod ?? ""}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      mailMethod: e.target.value as Owner["mailMethod"],
+                    })
+                  }
+                >
+                  <option value="">—</option>
+                  <option>Email</option>
+                  <option>Post</option>
+                  <option>SMS</option>
+                </select>
+              </Field>
+              {editing.isCompany && (
+                <>
+                  <Field label="Company / ROC Num">
+                    <input
+                      className="input"
+                      value={editing.companyNum ?? ""}
+                      onChange={(e) =>
+                        setEditing({ ...editing, companyNum: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="SST / GST Reg Num">
+                    <input
+                      className="input"
+                      value={editing.gstRegNo ?? ""}
+                      onChange={(e) =>
+                        setEditing({ ...editing, gstRegNo: e.target.value })
+                      }
+                    />
+                  </Field>
+                </>
+              )}
+              <Field label="Designation">
+                <input
+                  className="input"
+                  value={editing.designation ?? ""}
+                  onChange={(e) =>
+                    setEditing({ ...editing, designation: e.target.value })
                   }
                 />
               </Field>
@@ -227,6 +400,40 @@ export default function OwnersPage() {
                   onChange={(e) =>
                     setEditing({ ...editing, email: e.target.value })
                   }
+                />
+              </Field>
+              <Field label="Telephone 1">
+                <input
+                  className="input"
+                  value={editing.phone}
+                  onChange={(e) =>
+                    setEditing({ ...editing, phone: e.target.value })
+                  }
+                />
+              </Field>
+              <Field label="Telephone 2">
+                <input
+                  className="input"
+                  value={editing.phone2 ?? ""}
+                  onChange={(e) =>
+                    setEditing({ ...editing, phone2: e.target.value })
+                  }
+                />
+              </Field>
+              <Field label="Telephone 3">
+                <input
+                  className="input"
+                  value={editing.phone3 ?? ""}
+                  onChange={(e) =>
+                    setEditing({ ...editing, phone3: e.target.value })
+                  }
+                />
+              </Field>
+              <Field label="Fax">
+                <input
+                  className="input"
+                  value={editing.fax ?? ""}
+                  onChange={(e) => setEditing({ ...editing, fax: e.target.value })}
                 />
               </Field>
               <Field label="Mailing Address" className="sm:col-span-2">

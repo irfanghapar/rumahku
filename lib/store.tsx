@@ -303,6 +303,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 lpiMin: c.lpiMin ?? 0,
                 taxable: c.taxable ?? seedMatch?.taxable ?? false,
                 sstCode: c.sstCode ?? seedMatch?.sstCode ?? "EX",
+                postConsolidated:
+                  c.postConsolidated ?? seedMatch?.postConsolidated ?? false,
+                offset: c.offset ?? seedMatch?.offset ?? true,
               };
             }
           );

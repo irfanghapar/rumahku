@@ -2,12 +2,19 @@
 
 import { useMemo, useState } from "react";
 import { Badge, PageHeader } from "@/components/ui";
-import { fmtDate, fmtRM } from "@/lib/format";
-import { lotLedger, useStore } from "@/lib/store";
+import { fmtDate, fmtRM, todayISO } from "@/lib/format";
+import { lotLedger, outstandingForLot, useStore } from "@/lib/store";
 
 export default function LedgerPage() {
   const { state } = useStore();
   const [lotId, setLotId] = useState(state.lots[0]?.id ?? "");
+  const [fromDate, setFromDate] = useState("2026-01-01");
+  const [toDate, setToDate] = useState(todayISO());
+  const [scope, setScope] = useState("Combined");
+  const [displayByDoc, setDisplayByDoc] = useState(false);
+  const [hideVoided, setHideVoided] = useState(false);
+  const [consolidateLPI, setConsolidateLPI] = useState(true);
+  const [includeSummary, setIncludeSummary] = useState(false);
   const owner = state.owners.find(
     (o) => o.status === "Active" && o.lotIds.includes(lotId)
   );
@@ -17,14 +24,28 @@ export default function LedgerPage() {
     [state, lotId]
   );
 
+  // running balance across ALL entries, then window to the date range so the
+  // brought-forward balance stays correct.
   let running = 0;
-  const withBalance = entries.map((e) => {
-    running = Math.round((running + e.debit - e.credit) * 100) / 100;
-    return { ...e, balance: running };
-  });
+  let opening = 0;
+  const withBalance = entries
+    .map((e) => {
+      running = Math.round((running + e.debit - e.credit) * 100) / 100;
+      if (fromDate && e.date < fromDate) opening = running;
+      return { ...e, balance: running };
+    })
+    .filter(
+      (e) => (!fromDate || e.date >= fromDate) && (!toDate || e.date <= toDate)
+    );
 
-  const totalDebit = entries.reduce((s, e) => s + e.debit, 0);
-  const totalCredit = entries.reduce((s, e) => s + e.credit, 0);
+  const totalDebit = withBalance.reduce((s, e) => s + e.debit, 0);
+  const totalCredit = withBalance.reduce((s, e) => s + e.credit, 0);
+  const closing = withBalance.length
+    ? withBalance[withBalance.length - 1].balance
+    : opening;
+  const outstanding = lotId
+    ? outstandingForLot(state, lotId).reduce((s, i) => s + i.balance, 0)
+    : 0;
 
   return (
     <div>
@@ -56,25 +77,74 @@ export default function LedgerPage() {
         <div>
           <label className="label">Name</label>
           <input
-            className="input w-64"
+            className="input w-56"
             value={owner?.name ?? "Vacant"}
             disabled
           />
         </div>
-        {owner && (
-          <Badge tone="good">Ownership Active</Badge>
-        )}
+        <div>
+          <label className="label">From Date</label>
+          <input
+            type="date"
+            className="input w-40"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="label">To Date</label>
+          <input
+            type="date"
+            className="input w-40"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="label">Owner &amp; Tenant</label>
+          <select
+            className="input w-32"
+            value={scope}
+            onChange={(e) => setScope(e.target.value)}
+          >
+            <option>Combined</option>
+            <option>Owner Only</option>
+            <option>Tenant Only</option>
+          </select>
+        </div>
+        {owner && <Badge tone="good">Ownership Active</Badge>}
         <p className="ml-auto text-sm">
           Balance:{" "}
           <span
             className={
               "font-display text-lg font-bold " +
-              (running > 0 ? "text-danger-600" : "text-sage-600")
+              (closing > 0 ? "text-danger-600" : "text-sage-600")
             }
           >
-            {fmtRM(running)}
+            {fmtRM(closing)}
           </span>
         </p>
+      </div>
+
+      <div className="no-print mb-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-soot/80">
+        {(
+          [
+            ["Display By Document", displayByDoc, setDisplayByDoc],
+            ["Do not display voided items", hideVoided, setHideVoided],
+            ["Consolidate Monthly LPI", consolidateLPI, setConsolidateLPI],
+            ["Include Outstanding Summary", includeSummary, setIncludeSummary],
+          ] as [string, boolean, (v: boolean) => void][]
+        ).map(([label, val, set]) => (
+          <label key={label} className="flex cursor-pointer items-center gap-1.5">
+            <input
+              type="checkbox"
+              className="h-3.5 w-3.5 accent-clay-500"
+              checked={val}
+              onChange={(e) => set(e.target.checked)}
+            />
+            {label}
+          </label>
+        ))}
       </div>
 
       <div className="print-area table-card">
@@ -102,7 +172,9 @@ export default function LedgerPage() {
               <td className="td" colSpan={5}>
                 <span className="font-semibold text-soot/70">BALANCE B/F</span>
               </td>
-              <td className="td text-right text-soot/70">0.00</td>
+              <td className="td text-right text-soot/70">
+                {fmtRM(opening).replace("RM ", "")}
+              </td>
             </tr>
             {withBalance.map((e, i) => (
               <tr key={i} className="border-b border-line/60 last:border-0 hover:bg-cream/40">
@@ -136,9 +208,21 @@ export default function LedgerPage() {
                 {fmtRM(totalCredit).replace("RM ", "")}
               </td>
               <td className="td text-right font-display font-bold text-ink">
-                {fmtRM(running)}
+                {fmtRM(closing)}
               </td>
             </tr>
+            {includeSummary && (
+              <tr className="bg-clay-50">
+                <td className="td" colSpan={5}>
+                  <span className="font-semibold text-clay-700">
+                    Outstanding Summary (as at {fmtDate(toDate)})
+                  </span>
+                </td>
+                <td className="td text-right font-display font-bold text-danger-600">
+                  {fmtRM(outstanding)}
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

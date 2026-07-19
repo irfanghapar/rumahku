@@ -13,8 +13,19 @@ export default function ReceiptsPage() {
   const [mode, setMode] = useState<Receipt["mode"]>("Online Banking");
   const [refNum, setRefNum] = useState("");
   const [amount, setAmount] = useState("");
+  const [manualNum, setManualNum] = useState("");
+  const [issueTo, setIssueTo] = useState<"Owner" | "Tenant">("Owner");
+  const [bankCode, setBankCode] = useState("OR1 — Maybank");
+  const [itemDesc, setItemDesc] = useState("PAYMENT RECEIPT");
   const [alloc, setAlloc] = useState<Record<string, string>>({});
   const [lastReceipt, setLastReceipt] = useState<Receipt | null>(null);
+
+  const BANK_CODES = [
+    "OR1 — Maybank",
+    "OR2 — CIMB",
+    "OR3 — Public Bank",
+    "CASH — Cash in hand",
+  ];
 
   const owner = state.owners.find(
     (o) => o.status === "Active" && o.lotIds.includes(lotId)
@@ -125,12 +136,30 @@ export default function ReceiptsPage() {
                 disabled
               />
             </Field>
+            <Field label="Issue To">
+              <select
+                className="input"
+                value={issueTo}
+                onChange={(e) => setIssueTo(e.target.value as "Owner" | "Tenant")}
+              >
+                <option>Owner</option>
+                <option>Tenant</option>
+              </select>
+            </Field>
             <Field label="Date Trnx">
               <input
                 type="date"
                 className="input"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
+              />
+            </Field>
+            <Field label="Manual Num">
+              <input
+                className="input"
+                placeholder="optional"
+                value={manualNum}
+                onChange={(e) => setManualNum(e.target.value)}
               />
             </Field>
             <Field label="Payment Mode">
@@ -144,6 +173,17 @@ export default function ReceiptsPage() {
                 <option>Cash</option>
                 <option>Cheque</option>
                 <option>Credit Card</option>
+              </select>
+            </Field>
+            <Field label="Bank Code">
+              <select
+                className="input"
+                value={bankCode}
+                onChange={(e) => setBankCode(e.target.value)}
+              >
+                {BANK_CODES.map((b) => (
+                  <option key={b}>{b}</option>
+                ))}
               </select>
             </Field>
             <Field label="Cheque / Ref Num">
@@ -160,6 +200,13 @@ export default function ReceiptsPage() {
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
+              />
+            </Field>
+            <Field label="Item Description" className="sm:col-span-2 lg:col-span-4">
+              <input
+                className="input"
+                value={itemDesc}
+                onChange={(e) => setItemDesc(e.target.value.toUpperCase())}
               />
             </Field>
             <div className="flex flex-wrap items-end gap-2 sm:col-span-2">

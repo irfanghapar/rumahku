@@ -20,6 +20,10 @@ export default function GeneralBillingPage() {
   const [lotId, setLotId] = useState("");
   const [date, setDate] = useState(todayISO());
   const [remarks, setRemarks] = useState("");
+  const [refNum, setRefNum] = useState("");
+  const [issueTo, setIssueTo] = useState<"Owner" | "Tenant">("Owner");
+  const [dateBegin, setDateBegin] = useState("");
+  const [dateEnd, setDateEnd] = useState("");
   const [lines, setLines] = useState<Line[]>([
     { code: oneOffCodes[0]?.code ?? "", description: "", amount: "" },
   ]);
@@ -62,14 +66,20 @@ export default function GeneralBillingPage() {
           dueDate: addDays(date, state.settings.dueDays),
           code: code.code,
           docType: "IV" as const,
-          description: l.description || code.description,
+          description:
+            (l.description || code.description) + (refNum ? ` [Ref ${refNum}]` : ""),
           amount: Math.round(l.value * 100) / 100,
+          periodStart: dateBegin || undefined,
+          periodEnd: dateEnd || undefined,
         };
       }),
     });
     setPosted(true);
     setLines([{ code: oneOffCodes[0]?.code ?? "", description: "", amount: "" }]);
     setRemarks("");
+    setRefNum("");
+    setDateBegin("");
+    setDateEnd("");
     setTimeout(() => setPosted(false), 4000);
   }
 
@@ -119,6 +129,24 @@ export default function GeneralBillingPage() {
               disabled
             />
           </Field>
+          <Field label="Issue To">
+            <select
+              className="input"
+              value={issueTo}
+              onChange={(e) => setIssueTo(e.target.value as "Owner" | "Tenant")}
+            >
+              <option>Owner</option>
+              <option>Tenant</option>
+            </select>
+          </Field>
+          <Field label="Ref Num">
+            <input
+              className="input"
+              placeholder="optional"
+              value={refNum}
+              onChange={(e) => setRefNum(e.target.value)}
+            />
+          </Field>
           <Field label="Date Trnx">
             <input
               type="date"
@@ -135,6 +163,22 @@ export default function GeneralBillingPage() {
                 .reverse()
                 .join("/")}
               disabled
+            />
+          </Field>
+          <Field label="Date Begin">
+            <input
+              type="date"
+              className="input"
+              value={dateBegin}
+              onChange={(e) => setDateBegin(e.target.value)}
+            />
+          </Field>
+          <Field label="Date End">
+            <input
+              type="date"
+              className="input"
+              value={dateEnd}
+              onChange={(e) => setDateEnd(e.target.value)}
             />
           </Field>
           <Field label="Remarks" className="sm:col-span-2 lg:col-span-4">

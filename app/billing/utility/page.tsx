@@ -8,8 +8,10 @@ import { useStore } from "@/lib/store";
 export default function UtilityBillingPage() {
   const { state, dispatch } = useStore();
   const [readingDate, setReadingDate] = useState(todayISO());
+  const [docDate, setDocDate] = useState(todayISO());
   const [inputs, setInputs] = useState<Record<string, string>>({});
   const [posted, setPosted] = useState<number | null>(null);
+  const [drafted, setDrafted] = useState(false);
 
   const tariff = state.settings.waterTariff;
 
@@ -23,12 +25,19 @@ export default function UtilityBillingPage() {
         const thisReading = parseFloat(inputs[m.lotId] ?? "");
         const valid = !isNaN(thisReading) && thisReading >= m.lastReading;
         const consume = valid ? thisReading - m.lastReading : 0;
+        const prevConsume = m.lastConsume ?? 0;
+        const variance =
+          valid && prevConsume > 0
+            ? Math.round(((consume - prevConsume) / prevConsume) * 100)
+            : null;
         return {
           meter: m,
           owner,
           thisReading,
           valid,
           consume,
+          prevConsume,
+          variance,
           amount: Math.round(consume * tariff * 100) / 100,
         };
       });
@@ -74,15 +83,33 @@ export default function UtilityBillingPage() {
         title="Utility Meter Billing"
         subtitle={`Water billing at RM ${fmtNum(tariff)} per m³ — enter this month's readings`}
         actions={
-          <button className="btn-primary" onClick={post} disabled={ready.length === 0}>
-            Post {ready.length} bills to account
-          </button>
+          <div className="flex gap-2">
+            <button
+              className="btn-secondary"
+              onClick={() => {
+                if (ready.length === 0) return;
+                setDrafted(true);
+                setTimeout(() => setDrafted(false), 3000);
+              }}
+              disabled={ready.length === 0}
+            >
+              Save to Draft
+            </button>
+            <button className="btn-primary" onClick={post} disabled={ready.length === 0}>
+              Post {ready.length} to account
+            </button>
+          </div>
         }
       />
 
       {posted !== null && (
         <div className="mb-4 rounded-xl border border-sage-600/30 bg-sage-100 px-4 py-3 text-sm font-medium text-sage-700">
-          ✓ Posted {posted} water bills dated {fmtDate(readingDate)}.
+          ✓ Posted {posted} water bills dated {fmtDate(docDate)}.
+        </div>
+      )}
+      {drafted && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+          ✓ {ready.length} readings saved to draft (not yet posted).
         </div>
       )}
 
@@ -95,9 +122,18 @@ export default function UtilityBillingPage() {
           <label className="label">Reading Date</label>
           <input
             type="date"
-            className="input w-44"
+            className="input w-40"
             value={readingDate}
             onChange={(e) => setReadingDate(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="label">Doc Date</label>
+          <input
+            type="date"
+            className="input w-40"
+            value={docDate}
+            onChange={(e) => setDocDate(e.target.value)}
           />
         </div>
         <p className="ml-auto text-sm text-soot/70">
@@ -118,7 +154,9 @@ export default function UtilityBillingPage() {
               <th className="th">Last Date</th>
               <th className="th text-right">Last Meter</th>
               <th className="th text-right">This Meter</th>
-              <th className="th text-right">Consume (m³)</th>
+              <th className="th text-right">Prev Consume</th>
+              <th className="th text-right">This Consume</th>
+              <th className="th text-right">Variance</th>
               <th className="th text-right">Amount</th>
             </tr>
           </thead>
@@ -145,8 +183,23 @@ export default function UtilityBillingPage() {
                     }
                   />
                 </td>
+                <td className="td text-right text-soot/70">
+                  {r.prevConsume ? fmtNum(r.prevConsume, 0) : "—"}
+                </td>
                 <td className="td text-right">
                   {r.valid ? fmtNum(r.consume, 0) : "0"}
+                </td>
+                <td
+                  className={
+                    "td text-right " +
+                    (r.variance == null
+                      ? "text-soot/40"
+                      : r.variance > 20
+                        ? "text-danger-600"
+                        : "text-soot/70")
+                  }
+                >
+                  {r.variance == null ? "—" : `${r.variance > 0 ? "+" : ""}${r.variance}%`}
                 </td>
                 <td className="td text-right font-semibold">
                   {r.valid ? fmtRM(r.amount) : "—"}

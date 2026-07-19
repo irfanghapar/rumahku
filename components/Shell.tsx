@@ -4,6 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { StoreProvider, useStore } from "@/lib/store";
+import { SessionProvider, useSession } from "@/lib/session";
+import { PROPERTIES, findProperty } from "@/lib/properties";
+import LoginScreen from "@/components/LoginScreen";
 
 type NavItem = { href: string; label: string; icon: React.ReactNode };
 type NavGroup = { title: string; items: NavItem[] };
@@ -247,6 +250,68 @@ function ResetButton({ compact }: { compact?: boolean }) {
   );
 }
 
+/** switch active property: updates the session + the property identity
+ *  shown on documents. */
+function useSwitchProperty() {
+  const { state, dispatch } = useStore();
+  const { session, signIn } = useSession();
+  return (propertyId: string) => {
+    if (!session) return;
+    const prop = findProperty(propertyId);
+    dispatch({
+      type: "updateSettings",
+      settings: {
+        ...state.settings,
+        propertyName: prop.name,
+        propertyCode: prop.code,
+        address: prop.address,
+        phone: prop.phone,
+        email: prop.email,
+      },
+    });
+    signIn({ ...session, propertyId });
+  };
+}
+
+function PropertySwitcher() {
+  const { session } = useSession();
+  const switchTo = useSwitchProperty();
+  return (
+    <select
+      className="rounded-full border border-line bg-paper px-3 py-1 text-xs font-semibold text-ink focus:outline-none"
+      value={session?.propertyId ?? PROPERTIES[0].id}
+      onChange={(e) => switchTo(e.target.value)}
+      aria-label="Switch property"
+    >
+      {PROPERTIES.map((p) => (
+        <option key={p.id} value={p.id}>
+          {p.name} ({p.code})
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function AccountBar({ stacked }: { stacked?: boolean }) {
+  const { session, signOut } = useSession();
+  if (!session) return null;
+  return (
+    <div className={stacked ? "space-y-2" : "flex items-center gap-2"}>
+      <p className="truncate text-[11px] text-soot/70">
+        Signed in as <span className="font-semibold text-soot">{session.email}</span>
+      </p>
+      <button
+        onClick={signOut}
+        className={
+          "btn-secondary !px-3 !py-1.5 text-xs " + (stacked ? "w-full" : "")
+        }
+      >
+        Sign out
+      </button>
+    </div>
+  );
+}
+
 /* Desktop fixed sidebar */
 function Sidebar() {
   return (
@@ -257,10 +322,8 @@ function Sidebar() {
       <nav className="flex-1 overflow-y-auto px-3 pb-4">
         <NavLinks />
       </nav>
-      <div className="border-t border-line px-5 py-3">
-        <p className="text-[11px] text-soot/60">
-          Signed in as <span className="font-semibold text-soot">Admin</span>
-        </p>
+      <div className="space-y-2 border-t border-line px-5 py-3">
+        <AccountBar stacked />
       </div>
     </aside>
   );
@@ -286,8 +349,13 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
         <nav className="flex-1 overflow-y-auto px-3 pb-4">
           <NavLinks onNavigate={onClose} />
         </nav>
-        <div className="bottom-safe border-t border-line px-4 pt-3">
+        <div className="bottom-safe space-y-3 border-t border-line px-4 pt-3">
+          <div>
+            <p className="label">Property</p>
+            <PropertySwitcher />
+          </div>
           <ResetButton />
+          <AccountBar stacked />
         </div>
       </div>
     </div>
@@ -333,7 +401,12 @@ function Topbar() {
         <span className="mx-1 text-line">|</span>
         {state.settings.propertyName}
       </div>
-      <ResetButton compact />
+      <div className="flex items-center gap-3">
+        <PropertySwitcher />
+        <ResetButton compact />
+        <span className="h-5 w-px bg-line" />
+        <AccountBar />
+      </div>
     </header>
   );
 }
@@ -406,10 +479,19 @@ function Frame({ children }: { children: React.ReactNode }) {
   );
 }
 
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const { session, ready } = useSession();
+  if (!ready) return <div className="min-h-screen bg-cream" />;
+  if (!session) return <LoginScreen />;
+  return <Frame>{children}</Frame>;
+}
+
 export default function Shell({ children }: { children: React.ReactNode }) {
   return (
     <StoreProvider>
-      <Frame>{children}</Frame>
+      <SessionProvider>
+        <AuthGate>{children}</AuthGate>
+      </SessionProvider>
     </StoreProvider>
   );
 }
