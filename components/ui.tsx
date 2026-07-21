@@ -1,6 +1,55 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
+
+export function Breadcrumbs({
+  items,
+}: {
+  items: { label: string; href?: string }[];
+}) {
+  return (
+    <nav className="no-print mb-3 flex items-center gap-1.5 text-sm" aria-label="Breadcrumb">
+      {items.map((it, i) => {
+        const last = i === items.length - 1;
+        return (
+          <React.Fragment key={i}>
+            {it.href && !last ? (
+              <Link
+                href={it.href}
+                className="font-medium text-soot/70 hover:text-clay-500"
+              >
+                {it.label}
+              </Link>
+            ) : (
+              <span
+                className={last ? "font-semibold text-ink" : "text-soot/70"}
+                aria-current={last ? "page" : undefined}
+              >
+                {it.label}
+              </span>
+            )}
+            {!last && (
+              <svg
+                className="text-soot/30"
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m9 6 6 6-6 6" />
+              </svg>
+            )}
+          </React.Fragment>
+        );
+      })}
+    </nav>
+  );
+}
 
 export function PageHeader({
   title,

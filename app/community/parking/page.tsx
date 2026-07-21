@@ -1,24 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
-import {
-  Badge,
-  Drawer,
-  Field,
-  PageHeader,
-  SearchInput,
-  StatCard,
-} from "@/components/ui";
+import { Badge, PageHeader, SearchInput, StatCard } from "@/components/ui";
 import { fmtRM } from "@/lib/format";
 import { useStore } from "@/lib/store";
-import { ParkingBay } from "@/lib/types";
 
 export default function ParkingPage() {
   const { state, dispatch } = useStore();
   const [q, setQ] = useState("");
   const [level, setLevel] = useState("All");
-  const [assigning, setAssigning] = useState<ParkingBay | null>(null);
-  const [form, setForm] = useState({ lotId: "", plate: "", sticker: "", monthly: "0" });
 
   const levels = Array.from(new Set(state.bays.map((b) => b.level))).sort();
 
@@ -45,29 +36,6 @@ export default function ParkingPage() {
     return state.owners.find(
       (o) => o.status === "Active" && o.lotIds.includes(lotId)
     );
-  }
-
-  function openAssign(bay: ParkingBay) {
-    setAssigning(bay);
-    setForm({
-      lotId: bay.assignedLotId ?? "",
-      plate: bay.plate,
-      sticker: bay.sticker || `STK-${String(2600 + state.bays.length)}`,
-      monthly: String(bay.monthly),
-    });
-  }
-
-  function saveAssign() {
-    if (!assigning || !form.lotId) return;
-    dispatch({
-      type: "assignBay",
-      bayId: assigning.id,
-      lotId: form.lotId,
-      plate: form.plate.toUpperCase(),
-      sticker: form.sticker.toUpperCase(),
-      monthly: parseFloat(form.monthly) || 0,
-    });
-    setAssigning(null);
   }
 
   return (
@@ -180,12 +148,12 @@ export default function ParkingPage() {
                     {b.type === "Resident" &&
                       (b.assignedLotId ? (
                         <span className="inline-flex gap-1">
-                          <button
+                          <Link
+                            href={`/community/parking/${encodeURIComponent(b.id)}/edit`}
                             className="btn-ghost !px-2 !py-1 text-xs"
-                            onClick={() => openAssign(b)}
                           >
                             Edit
-                          </button>
+                          </Link>
                           <button
                             className="btn-secondary !px-2 !py-1 text-xs"
                             onClick={() =>
@@ -196,12 +164,12 @@ export default function ParkingPage() {
                           </button>
                         </span>
                       ) : (
-                        <button
+                        <Link
+                          href={`/community/parking/${encodeURIComponent(b.id)}/edit`}
                           className="btn-primary !px-3 !py-1 text-xs"
-                          onClick={() => openAssign(b)}
                         >
                           Assign
-                        </button>
+                        </Link>
                       ))}
                   </td>
                 </tr>
@@ -210,71 +178,6 @@ export default function ParkingPage() {
           </tbody>
         </table>
       </div>
-
-      <Drawer
-        open={!!assigning}
-        title={`${assigning?.assignedLotId ? "Edit" : "Assign"} bay ${assigning?.id}`}
-        onClose={() => setAssigning(null)}
-        footer={
-          <>
-            <button className="btn-secondary" onClick={() => setAssigning(null)}>
-              Cancel
-            </button>
-            <button
-              className="btn-primary"
-              onClick={saveAssign}
-              disabled={!form.lotId}
-            >
-              Save Assignment
-            </button>
-          </>
-        }
-      >
-        <div className="grid grid-cols-1 gap-4">
-          <Field label="Lot Num">
-            <select
-              className="input"
-              value={form.lotId}
-              onChange={(e) => setForm({ ...form, lotId: e.target.value })}
-            >
-              <option value="">Select lot…</option>
-              {[...state.lots]
-                .sort((a, b) => a.id.localeCompare(b.id))
-                .map((l) => (
-                  <option key={l.id}>{l.id}</option>
-                ))}
-            </select>
-          </Field>
-          <Field label="Vehicle Plate">
-            <input
-              className="input"
-              value={form.plate}
-              placeholder="e.g. WXY 1234"
-              onChange={(e) => setForm({ ...form, plate: e.target.value })}
-            />
-          </Field>
-          <Field label="Car Sticker No">
-            <input
-              className="input"
-              value={form.sticker}
-              onChange={(e) => setForm({ ...form, sticker: e.target.value })}
-            />
-          </Field>
-          <Field label="Monthly Rental (RM, 0 = included)">
-            <input
-              className="input"
-              inputMode="decimal"
-              value={form.monthly}
-              onChange={(e) => setForm({ ...form, monthly: e.target.value })}
-            />
-          </Field>
-          <p className="rounded-xl bg-cream px-3 py-2 text-xs text-soot/70">
-            Tip: for rented bays, bill the rental monthly with the{" "}
-            <span className="font-semibold">IVCP — Car Park Rental</span> code in
-            Monthly Billing.
-          </p>
-        </div>
-      </Drawer>
     </div>
   );
 }

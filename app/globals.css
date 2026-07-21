@@ -56,6 +56,47 @@ body {
   border-radius: 6px;
 }
 
+/* ---------------------------------------------------------------
+   Scrollbars — thin & subtle. Track is invisible; the thumb is a
+   faint rounded sliver that only firms up on hover.
+   --------------------------------------------------------------- */
+* {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgb(var(--color-ink) / 0.1) transparent;
+}
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--color-ink) / 0.08);
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(var(--color-ink) / 0.2);
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+/* fully hidden scrollbar (still scrollable) — used for the sidebar/menu */
+.scrollbar-none {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* old Edge */
+}
+.scrollbar-none::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+/* the dark right-hand panels (sign-in visual, hero) get a faint light thumb */
+.bg-clay-500 ::-webkit-scrollbar-thumb,
+.bg-clay-500::-webkit-scrollbar-thumb {
+  background-color: rgb(255 255 255 / 0.14);
+}
+
 @layer components {
   .card {
     @apply rounded-2xl border border-line bg-paper shadow-card;

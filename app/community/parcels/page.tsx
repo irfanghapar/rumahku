@@ -1,27 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
-import {
-  Badge,
-  Drawer,
-  Field,
-  PageHeader,
-  SearchInput,
-  StatCard,
-} from "@/components/ui";
+import { Badge, PageHeader, SearchInput, StatCard } from "@/components/ui";
 import { fmtDateTime, todayISO } from "@/lib/format";
 import { useStore } from "@/lib/store";
-
-const COURIERS = [
-  "J&T Express",
-  "Shopee Xpress",
-  "Pos Laju",
-  "GDex",
-  "Ninja Van",
-  "DHL",
-  "Lalamove",
-  "Other",
-];
 
 function nowLocal(): string {
   const d = new Date();
@@ -35,13 +18,6 @@ export default function ParcelsPage() {
   const [filter, setFilter] = useState<"All" | "At guardhouse" | "Collected">(
     "At guardhouse"
   );
-  const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState({
-    lotId: "",
-    recipient: "",
-    courier: COURIERS[0],
-    trackingNo: "",
-  });
 
   const rows = useMemo(
     () =>
@@ -63,38 +39,15 @@ export default function ParcelsPage() {
     (p) => p.status === "Collected" && (p.collectedAt ?? "").startsWith(today)
   );
 
-  function ownerFor(lotId: string) {
-    return state.owners.find(
-      (o) => o.status === "Active" && o.lotIds.includes(lotId)
-    );
-  }
-
-  function save() {
-    if (!form.lotId) return;
-    dispatch({
-      type: "addParcel",
-      parcel: {
-        lotId: form.lotId,
-        recipient: form.recipient || ownerFor(form.lotId)?.name || "Resident",
-        courier: form.courier,
-        trackingNo: form.trackingNo,
-        receivedAt: nowLocal(),
-        status: "At guardhouse",
-      },
-    });
-    setAdding(false);
-    setForm({ lotId: "", recipient: "", courier: COURIERS[0], trackingNo: "" });
-  }
-
   return (
     <div>
       <PageHeader
         title="Parcel Management"
         subtitle="Log deliveries at the guardhouse and track collection"
         actions={
-          <button className="btn-primary" onClick={() => setAdding(true)}>
+          <Link href="/community/parcels/new" className="btn-primary">
             + Log Parcel
-          </button>
+          </Link>
         }
       />
 
@@ -133,18 +86,18 @@ export default function ParcelsPage() {
             placeholder="Search lot, name or tracking no…"
           />
         </div>
-        {(["At guardhouse", "Collected", "All"] as const).map((f) => (
+        {(["At guardhouse", "Collected", "All"] as const).map((fl) => (
           <button
-            key={f}
-            onClick={() => setFilter(f)}
+            key={fl}
+            onClick={() => setFilter(fl)}
             className={
               "rounded-full border px-3 py-1 text-xs font-semibold transition-colors " +
-              (filter === f
+              (filter === fl
                 ? "border-clay-500 bg-clay-500 text-lime-400"
                 : "border-line bg-paper text-soot hover:bg-cream")
             }
           >
-            {f}
+            {fl}
           </button>
         ))}
         <p className="ml-auto text-xs text-soot/60">{rows.length} parcels</p>
@@ -173,9 +126,7 @@ export default function ParcelsPage() {
                 </td>
                 <td className="td">{p.courier}</td>
                 <td className="td text-soot/70">{p.trackingNo}</td>
-                <td className="td whitespace-nowrap">
-                  {fmtDateTime(p.receivedAt)}
-                </td>
+                <td className="td whitespace-nowrap">{fmtDateTime(p.receivedAt)}</td>
                 <td className="td">
                   {p.status === "Collected" ? (
                     <div>
@@ -211,77 +162,6 @@ export default function ParcelsPage() {
           </tbody>
         </table>
       </div>
-
-      <Drawer
-        open={adding}
-        title="Log Parcel"
-        onClose={() => setAdding(false)}
-        footer={
-          <>
-            <button className="btn-secondary" onClick={() => setAdding(false)}>
-              Cancel
-            </button>
-            <button className="btn-primary" onClick={save} disabled={!form.lotId}>
-              Log Parcel
-            </button>
-          </>
-        }
-      >
-        <div className="grid grid-cols-1 gap-4">
-          <Field label="Lot Num">
-            <select
-              className="input"
-              value={form.lotId}
-              onChange={(e) => {
-                const lotId = e.target.value;
-                setForm({
-                  ...form,
-                  lotId,
-                  recipient: ownerFor(lotId)?.name ?? "",
-                });
-              }}
-            >
-              <option value="">Select lot…</option>
-              {[...state.lots]
-                .sort((a, b) => a.id.localeCompare(b.id))
-                .map((l) => (
-                  <option key={l.id}>{l.id}</option>
-                ))}
-            </select>
-          </Field>
-          <Field label="Recipient">
-            <input
-              className="input"
-              value={form.recipient}
-              onChange={(e) => setForm({ ...form, recipient: e.target.value })}
-            />
-          </Field>
-          <Field label="Courier">
-            <select
-              className="input"
-              value={form.courier}
-              onChange={(e) => setForm({ ...form, courier: e.target.value })}
-            >
-              {COURIERS.map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Tracking No">
-            <input
-              className="input"
-              value={form.trackingNo}
-              placeholder="e.g. MY1234567890"
-              onChange={(e) =>
-                setForm({ ...form, trackingNo: e.target.value.toUpperCase() })
-              }
-            />
-          </Field>
-          <p className="rounded-xl bg-cream px-3 py-2 text-xs text-soot/70">
-            Received time is stamped automatically when you log the parcel.
-          </p>
-        </div>
-      </Drawer>
     </div>
   );
 }

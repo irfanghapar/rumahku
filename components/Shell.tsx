@@ -319,7 +319,7 @@ function Sidebar() {
       <div className="px-5 pb-4 pt-5">
         <Logo />
       </div>
-      <nav className="flex-1 overflow-y-auto px-3 pb-4">
+      <nav className="scrollbar-none flex-1 overflow-y-auto px-3 pb-4">
         <NavLinks />
       </nav>
       <div className="space-y-2 border-t border-line px-5 py-3">
@@ -346,7 +346,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
             {ic(ICONS.close, 18)}
           </button>
         </div>
-        <nav className="flex-1 overflow-y-auto px-3 pb-4">
+        <nav className="scrollbar-none flex-1 overflow-y-auto px-3 pb-4">
           <NavLinks onNavigate={onClose} />
         </nav>
         <div className="bottom-safe space-y-3 border-t border-line px-4 pt-3">
