@@ -59,7 +59,7 @@ export default function DepositsPage() {
           code: code.code,
           docType: "DN",
           description: code.description,
-          amount: code.rate,
+          amount: code.amount,
         },
       ],
     });

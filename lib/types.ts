@@ -56,8 +56,8 @@ export interface BillingCode {
   code: string; // e.g. IVSC
   docType: DocType;
   description: string;
-  method: "rate" | "fixed"; // rate = RM per sq ft, fixed = flat RM
-  rate: number;
+  rate: number; // RM per sq ft — area-based charge (0 = not area-based)
+  amount: number; // flat RM charge — used when rate is 0
   frequency: "Daily" | "Weekly" | "Monthly" | "Quarterly" | "One-off";
   debitAcc: string;
   creditAcc: string;

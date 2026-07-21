@@ -81,6 +81,17 @@ body {
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
+/* remove number-input spinner arrows everywhere */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 /* fully hidden scrollbar (still scrollable) — used for the sidebar/menu */
 .scrollbar-none {
   scrollbar-width: none; /* Firefox */

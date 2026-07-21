@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Breadcrumbs, Field, PageHeader } from "@/components/ui";
+import { Breadcrumbs, Field, NumberInput, PageHeader } from "@/components/ui";
 import { useStore } from "@/lib/store";
 import { Lot, LotType } from "@/lib/types";
 
@@ -107,11 +107,10 @@ export default function LotForm({ lotId }: { lotId?: string }) {
             />
           </Field>
           <Field label="Level Num">
-            <input
-              type="number"
-              className="input"
+            <NumberInput
               value={f.level}
-              onChange={(e) => set({ level: Number(e.target.value) })}
+              decimals={0}
+              onChange={(n) => set({ level: n })}
             />
           </Field>
           <Field label="Sub Phase">
@@ -167,22 +166,20 @@ export default function LotForm({ lotId }: { lotId?: string }) {
             </select>
           </Field>
           <Field label="Built-up Area (sq ft)">
-            <input
-              type="number"
-              className="input"
+            <NumberInput
               value={f.builtUp}
-              onChange={(e) => set({ builtUp: Number(e.target.value) })}
+              decimals={2}
+              onChange={(n) => set({ builtUp: n })}
             />
             <p className="mt-1 text-xs text-soot/50">
               ≈ {(f.builtUp * SQFT_TO_SQM).toFixed(2)} sq m
             </p>
           </Field>
           <Field label="Land Area (sq ft)">
-            <input
-              type="number"
-              className="input"
+            <NumberInput
               value={f.landArea ?? 0}
-              onChange={(e) => set({ landArea: Number(e.target.value) })}
+              decimals={2}
+              onChange={(n) => set({ landArea: n })}
             />
             <p className="mt-1 text-xs text-soot/50">
               ≈ {((f.landArea ?? 0) * SQFT_TO_SQM).toFixed(2)} sq m · strata units
@@ -190,11 +187,10 @@ export default function LotForm({ lotId }: { lotId?: string }) {
             </p>
           </Field>
           <Field label="Share Units">
-            <input
-              type="number"
-              className="input"
+            <NumberInput
               value={f.shareUnits}
-              onChange={(e) => set({ shareUnits: Number(e.target.value) })}
+              decimals={0}
+              onChange={(n) => set({ shareUnits: n })}
             />
           </Field>
           <Field label="Facing">

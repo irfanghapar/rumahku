@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Field, PageHeader } from "@/components/ui";
+import { Field, NumberInput, PageHeader } from "@/components/ui";
 import { useStore } from "@/lib/store";
 
 export default function SettingsPage() {
@@ -77,56 +77,38 @@ export default function SettingsPage() {
           <h2 className="mb-4 font-bold text-ink">Billing Rules</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Invoice Due Days">
-              <input
-                type="number"
-                className="input"
+              <NumberInput
                 value={form.dueDays}
-                onChange={(e) =>
-                  setForm({ ...form, dueDays: Number(e.target.value) })
-                }
+                decimals={0}
+                onChange={(n) => setForm({ ...form, dueDays: n })}
               />
             </Field>
             <Field label="Water Tariff (RM / m³)">
-              <input
-                type="number"
-                step="0.01"
-                className="input"
+              <NumberInput
                 value={form.waterTariff}
-                onChange={(e) =>
-                  setForm({ ...form, waterTariff: Number(e.target.value) })
-                }
+                decimals={2}
+                onChange={(n) => setForm({ ...form, waterTariff: n })}
               />
             </Field>
             <Field label="LPI Rate (% per annum)">
-              <input
-                type="number"
-                step="0.5"
-                className="input"
+              <NumberInput
                 value={form.lpiRatePct}
-                onChange={(e) =>
-                  setForm({ ...form, lpiRatePct: Number(e.target.value) })
-                }
+                decimals={2}
+                onChange={(n) => setForm({ ...form, lpiRatePct: n })}
               />
             </Field>
             <Field label="LPI Grace Period (days)">
-              <input
-                type="number"
-                className="input"
+              <NumberInput
                 value={form.lpiGraceDays}
-                onChange={(e) =>
-                  setForm({ ...form, lpiGraceDays: Number(e.target.value) })
-                }
+                decimals={0}
+                onChange={(n) => setForm({ ...form, lpiGraceDays: n })}
               />
             </Field>
             <Field label="SST Rate (%)">
-              <input
-                type="number"
-                step="0.5"
-                className="input"
+              <NumberInput
                 value={form.sstRatePct}
-                onChange={(e) =>
-                  setForm({ ...form, sstRatePct: Number(e.target.value) })
-                }
+                decimals={2}
+                onChange={(n) => setForm({ ...form, sstRatePct: n })}
               />
             </Field>
             <Field label="SST Registration No">

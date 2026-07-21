@@ -59,9 +59,9 @@ export default function MonthlyBillingPage() {
       for (const code of recurringCodes) {
         if (!selected.includes(code.code)) continue;
         const base =
-          code.method === "rate"
+          code.rate > 0
             ? Math.round(lot.builtUp * code.rate * 100) / 100
-            : code.rate;
+            : code.amount;
         const sst = code.taxable
           ? Math.round(base * (state.settings.sstRatePct / 100) * 100) / 100
           : 0;

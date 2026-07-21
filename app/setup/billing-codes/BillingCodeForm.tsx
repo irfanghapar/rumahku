@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Breadcrumbs, Field, PageHeader } from "@/components/ui";
+import { Breadcrumbs, Field, NumberInput, PageHeader } from "@/components/ui";
 import { FREQUENCIES, freqDays } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { BillingCode, DocType } from "@/lib/types";
@@ -19,8 +19,8 @@ const emptyCode: BillingCode = {
   code: "",
   docType: "IV",
   description: "",
-  method: "fixed",
-  rate: 0,
+  rate: 0, // RM per sq ft (area-based)
+  amount: 100, // default flat amount (RM)
   frequency: "Monthly",
   debitAcc: "1201001",
   creditAcc: "",
@@ -145,26 +145,27 @@ export default function BillingCodeForm({ code: codeId }: { code?: string }) {
               onChange={(e) => set({ description: e.target.value.toUpperCase() })}
             />
           </Field>
-          <Field label="Charging Method">
-            <select
-              className="input"
-              value={f.method}
-              onChange={(e) =>
-                set({ method: e.target.value as BillingCode["method"] })
-              }
-            >
-              <option value="fixed">Fixed amount (RM)</option>
-              <option value="rate">Rate per sq ft</option>
-            </select>
-          </Field>
-          <Field label={f.method === "rate" ? "Rate (RM / sq ft)" : "Amount (RM)"}>
-            <input
-              type="number"
-              step="0.0001"
-              className="input"
+          <Field label="Default Rate (RM / sq ft)">
+            <NumberInput
               value={f.rate}
-              onChange={(e) => set({ rate: Number(e.target.value) })}
+              decimals={4}
+              placeholder="0.0000"
+              onChange={(n) => set({ rate: n })}
             />
+            <p className="mt-1 text-xs text-soot/50">
+              Charged per sq ft of built-up area
+            </p>
+          </Field>
+          <Field label="Amount (RM)">
+            <NumberInput
+              value={f.amount}
+              decimals={2}
+              placeholder="0.00"
+              onChange={(n) => set({ amount: n })}
+            />
+            <p className="mt-1 text-xs text-soot/50">
+              Flat charge — used when the rate is 0
+            </p>
           </Field>
           <Field label="Frequency">
             <select
@@ -199,11 +200,10 @@ export default function BillingCodeForm({ code: codeId }: { code?: string }) {
             />
           </Field>
           <Field label="Due Days">
-            <input
-              type="number"
-              className="input"
+            <NumberInput
               value={f.dueDays}
-              onChange={(e) => set({ dueDays: Number(e.target.value) })}
+              decimals={0}
+              onChange={(n) => set({ dueDays: n })}
             />
           </Field>
         </div>
@@ -224,41 +224,35 @@ export default function BillingCodeForm({ code: codeId }: { code?: string }) {
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Field label="LPI Rate (% p.a.)">
-              <input
-                type="number"
-                step="0.5"
-                className="input"
-                disabled={!f.lpiChargeable}
+              <NumberInput
                 value={f.lpiRate}
-                onChange={(e) => set({ lpiRate: Number(e.target.value) })}
+                decimals={2}
+                disabled={!f.lpiChargeable}
+                onChange={(n) => set({ lpiRate: n })}
               />
             </Field>
             <Field label="LPI Grace (days)">
-              <input
-                type="number"
-                className="input"
-                disabled={!f.lpiChargeable}
+              <NumberInput
                 value={f.lpiGrace}
-                onChange={(e) => set({ lpiGrace: Number(e.target.value) })}
+                decimals={0}
+                disabled={!f.lpiChargeable}
+                onChange={(n) => set({ lpiGrace: n })}
               />
             </Field>
             <Field label="LPI Skip (months)">
-              <input
-                type="number"
-                className="input"
-                disabled={!f.lpiChargeable}
+              <NumberInput
                 value={f.lpiSkip}
-                onChange={(e) => set({ lpiSkip: Number(e.target.value) })}
+                decimals={0}
+                disabled={!f.lpiChargeable}
+                onChange={(n) => set({ lpiSkip: n })}
               />
             </Field>
             <Field label="Minimum LPI (RM)">
-              <input
-                type="number"
-                step="0.01"
-                className="input"
-                disabled={!f.lpiChargeable}
+              <NumberInput
                 value={f.lpiMin}
-                onChange={(e) => set({ lpiMin: Number(e.target.value) })}
+                decimals={2}
+                disabled={!f.lpiChargeable}
+                onChange={(n) => set({ lpiMin: n })}
               />
             </Field>
           </div>

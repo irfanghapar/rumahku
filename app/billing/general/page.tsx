@@ -232,8 +232,8 @@ export default function GeneralBillingPage() {
                       setLine(i, {
                         code: e.target.value,
                         amount:
-                          code && code.rate > 0 && code.method === "fixed"
-                            ? String(code.rate)
+                          code && code.amount > 0
+                            ? String(code.amount)
                             : l.amount,
                       });
                     }}

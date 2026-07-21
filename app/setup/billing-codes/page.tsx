@@ -51,7 +51,8 @@ export default function BillingCodesPage() {
               <th className="th">Code</th>
               <th className="th">Doc</th>
               <th className="th">Item Description</th>
-              <th className="th text-right">Rate / Amount</th>
+              <th className="th text-right">Rate / sq ft</th>
+              <th className="th text-right">Amount</th>
               <th className="th">Frequency</th>
               <th className="th text-center">LPI</th>
               <th className="th text-center">SST</th>
@@ -69,9 +70,18 @@ export default function BillingCodesPage() {
                 </td>
                 <td className="td">{c.description}</td>
                 <td className="td text-right">
-                  {c.method === "rate"
-                    ? `RM ${fmtNum(c.rate, 4)} / sq ft`
-                    : `RM ${fmtNum(c.rate)}`}
+                  {c.rate > 0 ? (
+                    `RM ${fmtNum(c.rate, 4)}`
+                  ) : (
+                    <span className="text-soot/30">—</span>
+                  )}
+                </td>
+                <td className="td text-right">
+                  {c.amount > 0 ? (
+                    `RM ${fmtNum(c.amount)}`
+                  ) : (
+                    <span className="text-soot/30">—</span>
+                  )}
                 </td>
                 <td className="td whitespace-nowrap">
                   {c.frequency}

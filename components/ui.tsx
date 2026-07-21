@@ -51,6 +51,61 @@ export function Breadcrumbs({
   );
 }
 
+/**
+ * Numeric text field — no spinner arrows. Input is validated with a regex so
+ * only digits and up to `decimals` decimal places can be typed (default 2).
+ */
+export function NumberInput({
+  value,
+  onChange,
+  decimals = 2,
+  className = "input",
+  placeholder,
+  disabled,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+  decimals?: number;
+  className?: string;
+  placeholder?: string;
+  disabled?: boolean;
+}) {
+  const [text, setText] = React.useState(value ? String(value) : "");
+  // reflect external value changes (form reset, method switch, etc.) without
+  // clobbering a partial entry like "12." that still parses to the same number
+  React.useEffect(() => {
+    const cur = text === "" || text === "." ? 0 : parseFloat(text);
+    if (cur !== value) setText(value ? String(value) : "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  const re =
+    decimals > 0
+      ? new RegExp(`^\\d*(\\.\\d{0,${decimals}})?$`)
+      : /^\d*$/;
+
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      className={className}
+      placeholder={placeholder}
+      disabled={disabled}
+      value={text}
+      onChange={(e) => {
+        const v = e.target.value;
+        if (v === "" || re.test(v)) {
+          setText(v);
+          onChange(v === "" || v === "." ? 0 : parseFloat(v));
+        }
+      }}
+      onBlur={() => {
+        if (text.endsWith(".")) setText(text.slice(0, -1));
+      }}
+    />
+  );
+}
+
 export function PageHeader({
   title,
   subtitle,

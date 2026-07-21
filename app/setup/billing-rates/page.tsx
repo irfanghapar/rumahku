@@ -107,13 +107,13 @@ export default function BillingRatesPage() {
     if (preview.rate != null) {
       dispatch({
         type: "upsertCode",
-        code: { ...code, method: "rate", rate: roundTo(preview.rate, 4) },
+        code: { ...code, rate: roundTo(preview.rate, 4), amount: 0 },
       });
     } else {
       const flat = Object.values(preview.amounts)[0] ?? 0;
       dispatch({
         type: "upsertCode",
-        code: { ...code, method: "fixed", rate: flat },
+        code: { ...code, rate: 0, amount: flat },
       });
     }
     refresh();
