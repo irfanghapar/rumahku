@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { PageHeader, Badge } from "@/components/ui";
-import { fmtNum, fmtRM } from "@/lib/format";
+import { fmtNum, fmtRM, freqWithDays } from "@/lib/format";
 import { useStore } from "@/lib/store";
 
 type Scope = "all" | "single" | "range" | "query";
@@ -225,8 +225,12 @@ export default function BillingRatesPage() {
           </select>
         </div>
         <div>
-          <label className="label">Month Frequency</label>
-          <input className="input w-28" value={code?.frequency ?? ""} disabled />
+          <label className="label">Frequency</label>
+          <input
+            className="input w-40"
+            value={code ? freqWithDays(code.frequency) : ""}
+            disabled
+          />
         </div>
         <div>
           <label className="label">Round Up (dp)</label>

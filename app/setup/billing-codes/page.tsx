@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Badge, PageHeader } from "@/components/ui";
-import { fmtNum } from "@/lib/format";
+import { fmtNum, freqDays } from "@/lib/format";
 import { useStore } from "@/lib/store";
 
 export default function BillingCodesPage() {
@@ -73,7 +73,14 @@ export default function BillingCodesPage() {
                     ? `RM ${fmtNum(c.rate, 4)} / sq ft`
                     : `RM ${fmtNum(c.rate)}`}
                 </td>
-                <td className="td">{c.frequency}</td>
+                <td className="td whitespace-nowrap">
+                  {c.frequency}
+                  {freqDays(c.frequency) > 0 && (
+                    <span className="ml-1 text-xs text-soot/50">
+                      · {freqDays(c.frequency)}d
+                    </span>
+                  )}
+                </td>
                 <td className="td text-center">
                   {c.lpiChargeable ? (
                     <Badge tone="warn">{fmtNum(c.lpiRate, 0)}%</Badge>

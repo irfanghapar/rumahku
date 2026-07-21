@@ -58,7 +58,7 @@ export interface BillingCode {
   description: string;
   method: "rate" | "fixed"; // rate = RM per sq ft, fixed = flat RM
   rate: number;
-  frequency: "Monthly" | "Quarterly" | "One-off";
+  frequency: "Daily" | "Weekly" | "Monthly" | "Quarterly" | "One-off";
   debitAcc: string;
   creditAcc: string;
   active: boolean;

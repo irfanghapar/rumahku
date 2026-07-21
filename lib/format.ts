@@ -26,6 +26,36 @@ export function fmtDate(iso: string | null | undefined): string {
   return `${dd}/${mm}/${d.getFullYear()}`;
 }
 
+/** Billing frequencies and their equivalent length in days. */
+export const FREQUENCIES = [
+  "Daily",
+  "Weekly",
+  "Monthly",
+  "Quarterly",
+  "One-off",
+] as const;
+
+export function freqDays(freq: string): number {
+  switch (freq) {
+    case "Daily":
+      return 1;
+    case "Weekly":
+      return 7;
+    case "Monthly":
+      return 30;
+    case "Quarterly":
+      return 90;
+    default:
+      return 0; // One-off
+  }
+}
+
+/** e.g. "Monthly · 30 days" (One-off returns just "One-off"). */
+export function freqWithDays(freq: string): string {
+  const d = freqDays(freq);
+  return d ? `${freq} · ${d} days` : freq;
+}
+
 export function fmtDateTime(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = new Date(iso);

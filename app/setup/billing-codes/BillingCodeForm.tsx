@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Breadcrumbs, Field, PageHeader } from "@/components/ui";
+import { FREQUENCIES, freqDays } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { BillingCode, DocType } from "@/lib/types";
 
@@ -173,10 +174,15 @@ export default function BillingCodeForm({ code: codeId }: { code?: string }) {
                 set({ frequency: e.target.value as BillingCode["frequency"] })
               }
             >
-              <option>Monthly</option>
-              <option>Quarterly</option>
-              <option>One-off</option>
+              {FREQUENCIES.map((fr) => (
+                <option key={fr}>{fr}</option>
+              ))}
             </select>
+            <p className="mt-1 text-xs text-soot/50">
+              {freqDays(f.frequency)
+                ? `Every ${freqDays(f.frequency)} days`
+                : "Charged once (not recurring)"}
+            </p>
           </Field>
           <Field label="Debit Acctno">
             <input
